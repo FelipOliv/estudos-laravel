@@ -477,3 +477,186 @@ class ClienteController extends Controller
 
 */
 ````
+
+
+# Migrações
+
+Criando uma migração: ~ <b>php artisan make:migration create_example_table</b>
+
+Especificando o nome da table: ~ php artisan make:migration create_example_table <b>--create=example</b>
+
+Executa as migração que ainda não foram executadas: <b>php artisan migrate</b>
+
+Voltando uma modificação:<b>php artisan migrate:rollback</b>
+
+criando uma migration que faz uma modificação em uma tabela (adiciona uma fk por exemplo): php artisan make:migration add_example_column <b>--table=example</b>
+
+Desfazendo todas as migrações e em seguida subindo tudo novamente: <b>php artisan migrate:refresh</b>
+
+Dropando todas as tables: <b>php artisan migrate:reset</b>
+
+# Modelos
+
+Criar um Model: <b>php artisan make:model Example</b>
+
+Cria um registro:
+<b>Example::create ( ['name' => 'value' ] )</b>
+<b>
+```
+    $example = new App\Example;
+    $example->name = 'value';
+    $example->save();
+```
+</b>
+
+Consulta um registro:
+
+```
+Example::all();
+Example::find(1);
+Example::find([1, 2, 3]); // O find() automaticamente busca pelo ID
+```
+
+Utilizando <b>where</b>
+
+```
+Example::where('column', 'value')->get();
+Example::where('column', 'expression', 'value')->get();
+Example::where('id', '>', 1)->get();
+Example::where('id', '<>', 1)->get();
+Example::where('id', '<', 1)->get();
+Example::where('name, 'like', '%f%')->get();
+Example::whereBetween('id', [1, 10])->get(); intervalo
+Example::whereNotBetween('id', [1, 10])->get(); fora do intervalo
+Example::whereIn('id', [1, 10])->get(); retorna todos que estão nesse array
+Example::whereNot('id', [1, 10])->get(); retorna todos que não estão no array
+```
+
+Encadeando query
+
+```
+Example::where('id', '>', 1)->where('name', 'example')->get();
+
+Example::where('id', '>', 1)->orWhere('name', 'example')->get();
+
+Example::where (function ($objectBuilder)
+{
+    $objectBuilder->where ('id', '>', 1)->where('id', '<', 4);
+
+})->where(function($objectBuilder)
+{
+    $objectBuilder->where('name', 'LG')->orWhere('name', 'Apple');
+
+})->get();
+```
+
+Ordenação de resultados:
+
+```
+Example::orderBy('name')->get();
+
+Example::orderBy('name', 'desc')->get();
+
+Example::where('id', '>', 1)->orderBy('name', 'desc')->get();
+```
+
+Atualizando registros:
+
+```
+$example = Example::find(1);
+$example->name = "example";
+$example->save();
+```
+
+Atualizando vários registros
+
+```
+$example->fill(['column' => 'value', 'otherColumn' => 'value']);
+$example->save();
+
+uso: receber um request, e aplicar o $request->all() dentro do fill()
+
+Example::where('id', 1)->update($request->all());
+```
+
+Deletar um registro
+
+```
+$example = Example::find(1);
+$example->delete();
+
+Example::destroy(1);
+Example::where('id', '>', 1)->delete();
+```
+
+## SoftDeletes
+
+SoftDeletes são interessantes pois simulam que um registro foi apagado. Na prática, uma coluna chamada <b>deleted_at</b> é adicionada na tabela, e quando um registro for deletado, na verdade a coluna deleted_at receberá um timestamp do momento que aquele registro foi supostamente apagado.
+
+Para ter essa feature, é preciso fazer duas coisas:
+- na migration onde você quer o softDeletes, adicione: <b>$table->softDeletes();</b>
+- No Model dessa migration use a trait softDeletes: <b>use SoftDeletes;</b>
+
+<b>O Laravel não seleciona os registros com o deleted_at preenchido (pois foram "apagados"), mas caso essa seja a intenção, ele dispõe de alguns métodos especificos para buscar esses registros:</b>
+
+```
+Example::withTrashed(); (retorna um builder object)
+Example::withTrashed()->get(); (retorna os registros apagados)
+```
+
+Saber se um registro foi apagado:
+
+```
+->trashed()
+
+exemplo
+
+Example::withTrashed()->get()[1]->trashed(); (retorna todos os registros, incluindo os que foram apagados, e o ->trashed() verifica se o registro foi apagado e retorna um bool)
+```
+
+Buscando somente registros que foram apagados:
+```
+Example::onlyTrashed()->get();
+```
+
+Para restaurar um registro apagado:
+```
+Example::onlyTrashed()[index]->restore();
+```
+
+Deletar realmente um registro com softDeletes
+```
+Example::find(2)->forceDelete();
+```
+
+
+# coletions
+```
+Example::all()->first();
+Example::all()->last();
+Example::all()->reverse();
+
+Somente uma coluna:
+Example::all()->pluck('name');
+Somente uma coluna e transformar em array:
+Example::all()->pluck('name')->toArray();
+Somente uma coluna e transformar em json:
+Example::all()->pluck('name')->toJson();
+
+Todos os registros e transformar em json (útil para uma response tipo API):
+Example::all()->toJson();
+
+Retornar qualquer um entre todos:
+Example::all()->random();
+
+Retornar o maior ID
+Example::all()->max('id');
+
+Retornar o menor ID
+Example::all()->min('id');
+
+Soma os IDs
+Example::all()->sum('id');
+
+Example::all()->chunk(3); agrupa o resultado (exemplo de uso: 3 cards para cada linha)
+```

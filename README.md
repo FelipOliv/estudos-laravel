@@ -248,7 +248,7 @@ class FirstController extends Controller
  * -> store : para persistir um recurso
  * -> show : para mostrar um recurso específico
  * -> edit : para mostrar um formulário de edição do recurso
- * -> update : para persistir a atualiuzação do recurso
+ * -> update : para persistir a atualização do recurso
  * -> destroy : para apagar um recurso
 */
 
@@ -259,8 +259,12 @@ Route::resource("cliente", "ClienteController") ;
  * para seu método específico no controlador criado a partir do comando resource.
  * 
  * Na prática isso significa que se não tivesse esse Route::resource, teria-mos que
- * direcionar na mão cada endpoint para cada método especiífico da rota e do verbo http
+ * direcionar na mão cada endpoint para cada método específico da rota e do verbo http
 */
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
 
 class ClienteController extends Controller
 {
@@ -310,7 +314,24 @@ class ClienteController extends Controller
      */
     public function index()
     {
-        return view ("clients.index", ["clients" => session("clientes")]) ;
+        return view ("clients.index")
+        ->with("clients", session("clientes"))
+        ->with("title", "my title") ;
+
+        /**
+         *  Maneiras diferentes de passar dados para uma view
+         * 
+         * $varName = "content" ;
+         * 
+         * compact
+         * return view("name", compact("varName", $varName))
+         * 
+         * assoc array
+         * return view ("viewName", ["varName" => $varName])
+         * 
+         * with function
+         * return view ("viewName")->with("varName", $varName)
+        */
     }
 
     /**
